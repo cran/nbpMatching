@@ -36,7 +36,7 @@ setMethod("nonbimatch", "distancematrix", function(mdm, threshold=NA, precision,
         wt <- wt*shift
         print(sprintf("Note: Distances scaled by %s to ensure all data can be handled", shift))
     }
-    match <- .Fortran('mwrap', PACKAGE="nbpMatching", n=as.integer(n), wt=as.integer(wt), nmatch=as.vector(nmatch), prcn=precision)$nmatch
+    match <- .Fortran(mwrap, n=as.integer(n), wt=as.integer(wt), nmatch=as.vector(nmatch), prcn=precision)$nmatch
 
     # remove chameleon to chameleon matches
     if(!is.na(threshold)) {
@@ -76,10 +76,11 @@ setMethod("runner", "data.frame", function(covariate, seed=101, ..., mate.random
     step1 <- gendistance(covariate, ...)
     step2 <- distancematrix(step1, ...)
     if(mate.random) {
-        restoreRandom <- FALSE
-        if(exists(".Random.seed")) {
-            save.seed <- .Random.seed
-            restoreRandom <- TRUE
+        if(exists(".Random.seed", envir = .GlobalEnv)) {
+            save.seed <- get(".Random.seed", envir= .GlobalEnv)
+            on.exit(assign(".Random.seed", save.seed, envir = .GlobalEnv))
+        } else {
+            on.exit(rm(".Random.seed", envir = .GlobalEnv))
         }
         if(!is.numeric(seed)) seed <- 101
         set.seed(seed)
@@ -93,8 +94,6 @@ setMethod("runner", "data.frame", function(covariate, seed=101, ..., mate.random
             options <- options[-match(mates, options)]
         }
         result <- data.frame(match=result)
-        if(restoreRandom) .Random.seed <<- save.seed
-        else rm(.Random.seed, inherits=TRUE)
 
         ids <- rownames(step2)
         matches <- data.frame("Group1.ID"=NA, "Group1.Row"=numeric(n), "Group2.ID"=NA, "Group2.Row"=numeric(n), "Distance"=numeric(n))

@@ -67,8 +67,9 @@ setMethod("gendistance", "data.frame", function(covariate, idcol=NULL, weights=N
     # remove bad columns
     if(length(badcol) >= 1L) {
         weights <- weights[-badcol]
-        bad.data <- covariate[,badcol]
-        covariate <- covariate[,-badcol]
+        # selecting one column from a data.frame creates a vector; using drop keeps a data.frame
+        bad.data <- covariate[,badcol, drop=FALSE]
+        covariate <- covariate[,-badcol, drop=FALSE]
     }
     # validate rankcols
     if(!is.null(rankcols)) {
@@ -109,7 +110,6 @@ setMethod("gendistance", "data.frame", function(covariate, idcol=NULL, weights=N
     # Create the covariance matrix and invert it
     X.cov <- cov.wt(X)
     # use pseudo-inverse if matrix is singular
-    Sinv <- tryCatch(solve(X.cov$cov), error=function(e) {})
     Sinv <- tryCatch(solve(X.cov$cov), error=function(e) { warning(sprintf("%s\nMatrix singular: Euclidean distance used", e[[1]])); NULL })
     if(is.null(Sinv)) {
         Sinv <- solve(diag(diag(X.cov$cov)))
@@ -120,10 +120,11 @@ setMethod("gendistance", "data.frame", function(covariate, idcol=NULL, weights=N
         Sinv[,i] <- Sinv[,i]*weights[i]
     }
 
-    # Define a function to create the distance matrix using Sinv and X
-    mdistmaker <- function(row1, row2) { t(X[row1,]-X[row2,]) %*% Sinv %*% (X[row1,]-X[row2,]) }
     # Create the distance matrix mdists
-    mdists <- sapply(seq_len(nr), FUN=function(x) mapply(mdistmaker, x, seq_len(nr)))
+    mdists <- sapply(seq_len(nr), FUN=function(x) { y <- X - X[rep(x, nr),]; rowSums(y %*% Sinv * y) })
+    # Define a function to create the distance matrix using Sinv and X, previously done this way
+    # mdistmaker <- function(row1, row2) { t(X[row1,]-X[row2,]) %*% Sinv %*% (X[row1,]-X[row2,]) }
+    # mdists <- sapply(seq_len(nr), FUN=function(x) mapply(mdistmaker, x, seq_len(nr)))
     # take the square root
     mdists <- sqrt(mdists)
 
