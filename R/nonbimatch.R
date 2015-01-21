@@ -1,29 +1,68 @@
-# distance matrix method - nonbimatch
-# returns a list of matched pairs
+#'Nonbipartite Matching
+#'
+#'The nonbinmatch function creates the set of pairwise matches that minimizes
+#'the sum of distances between the pairs.
+#'
+#'The nonbinmatch function calls the Fortran code (Derigs) and set of pairwise
+#'matches that minimizes the sum of distances between the pairs.
+#'
+#'@aliases nonbimatch nonbimatch,distancematrix-method
+#'@param mdm A distancematrix object.  See the distancematrix function.
+#'@param threshold An integer value, indicating the distance needed to create
+#'chameleon matches.
+#'@param precision The largest value in the matrix will have at most this many
+#'digits.  The default value is six.
+#'@param \dots Additional arguments, these are not used.
+#'@return
+#'
+#'  \item{matches}{description data.frame containing matches}
+#'
+#'  \item{halves}{description data.frame containing each match}
+#'
+#'  \item{total}{description sum of the distances across all pairs}
+#'
+#'  \item{mean}{description mean distance for each pair}
+#'@exportMethod nonbimatch
+#'@author Cole Beck
+#'@seealso \code{\link{distancematrix}}
+#'@examples
+#'
+#'plainmatrix<-as.matrix(dist(sample(1:25, 8, replace=TRUE)))
+#'diag(plainmatrix) <- 99999  # setting diagonal to an infinite distance for
+#'                            # pedagogical reasons (the diagonal may be left
+#'                            # as zero)
+#'mdm<-distancematrix(plainmatrix)
+#'res<-nonbimatch(mdm)
+#'
+
 setGeneric("nonbimatch", function(mdm, threshold=NA, precision=6, ...) standardGeneric("nonbimatch"))
 setMethod("nonbimatch", "distancematrix", function(mdm, threshold=NA, precision, ...) {
     if(any(is.na(as.integer(mdm)))) {
         stop("Elements of a distance matrix must be integers")
     }
     n <- nrow(mdm)
+    if(n == 0) {
+        stop("distance matrix has no rows")
+    }
     if(n%%2 == 1) {
         stop("There must be an even number of elements")
     }
     if(is.null(rownames(mdm))) {
-        rownames(mdm) <- seq.int(n)
+        rownames(mdm) <- seq_len(n)
     }
     ids <- rownames(mdm)
     if(!is.na(threshold) && threshold >= 0) {
         # extend the distance matrix for chameleons
-        mdm2 <- data.frame(matrix(threshold, nrow=n*2, ncol=n*2))
-        mdm2[seq_len(n), seq_len(n)] <- mdm
-        mdm <- mdm2
-        rm(mdm2)
+        newvals <- rep(threshold, n)
+        # add columns
+        mdm <- do.call("cbind", c(list(mdm), newvals))
+        # add rows
+        mdm <- do.call("rbind", c(list(mdm), newvals))
         n <- n*2
     } else threshold <- NA
 
-    wt <- as.vector(t(mdm))
-    nmatch <- seq.int(n)
+    wt <- c(mdm)
+    nmatch <- seq_len(n)
     numdigits <- floor(log10(max(wt))) + 1
     if(!is.numeric(precision) || precision < 1) {
         precision <- 6
@@ -56,13 +95,8 @@ setMethod("nonbimatch", "distancematrix", function(mdm, threshold=NA, precision,
         }
     }
 
-    result <- data.frame(match)
-    matches <- data.frame("Group1.ID"=NA, "Group1.Row"=numeric(n), "Group2.ID"=NA, "Group2.Row"=numeric(n), "Distance"=numeric(n))
-
-    for(i in seq.int(n)) {
-        matches[i,c(1,3)] <- c(ids[i], ids[result[i, 'match']])
-        matches[i,c(2,4,5)] <- c(i, result[i, 'match'], mdm[i, result[i,1]])
-    }
+    i <- seq_len(n)
+    matches <- data.frame("Group1.ID"=ids, "Group1.Row"=i, "Group2.ID"=ids[match], "Group2.Row"=match, "Distance"=mdm[cbind(i, match)])
     halves <- matches[matches[,2] < matches[,4],]
     distance <- sum(matches[,5])
     total <- distance/2
@@ -93,14 +127,9 @@ setMethod("runner", "data.frame", function(covariate, seed=101, ..., mate.random
             result[mates[2]] <- mates[1]
             options <- options[-match(mates, options)]
         }
-        result <- data.frame(match=result)
-
+        i <- seq_len(n)
         ids <- rownames(step2)
-        matches <- data.frame("Group1.ID"=NA, "Group1.Row"=numeric(n), "Group2.ID"=NA, "Group2.Row"=numeric(n), "Distance"=numeric(n))
-        for(i in seq.int(n)) {
-            matches[i,c(1,3)] <- c(ids[i], ids[result[i, 'match']])
-            matches[i,c(2,4,5)] <- c(i, result[i, 'match'], step2[i, result[i,1]])
-        }
+        matches <- data.frame("Group1.ID"=ids, "Group1.Row"=i, "Group2.ID"=ids[result], "Group2.Row"=result, "Distance"=step2[i,result])
         halves <- matches[matches[,2] < matches[,4],]
         distance <- sum(matches[,5])
         total <- distance/2
