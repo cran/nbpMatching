@@ -50,6 +50,9 @@
 #'trickle-in randomized trials.  When set, non-NA values from this column are
 #'replaced with the value 1.  This prevents records with previously assigned
 #'treatments (the \sQuote{reservior}) from matching each other.
+#'@param outRawDist a logical, indicating if the raw distance matrix should also
+#'be returned.  The raw form is before distance modifiers such as \sQuote{prevent}
+#'take effect.
 #'@param \dots Additional arguments, not used at this time.
 #'@return a list object with several elements
 #'
@@ -70,6 +73,8 @@
 #'  \item{missing.weight}{weight to apply to missingness indicator columns}
 #'
 #'  \item{ndiscard}{number of elements that will match phantoms}
+#'
+#'  \item{rawDist}{raw distance matrix, only provided if \sQuote{outRawDist} is TRUE}
 #'@exportMethod gendistance
 #'@author Cole Beck
 #'@seealso \code{\link{distancematrix}}
@@ -90,11 +95,11 @@
 setGeneric("gendistance", function(covariate, idcol=NULL, weights=NULL,
            prevent=NULL, force=NULL, rankcols=NULL, missing.weight=0.1,
            ndiscard=0, singular.method='solve', talisman=NULL,
-           prevent.res.match=NULL, ...) standardGeneric("gendistance"))
+           prevent.res.match=NULL, outRawDist = FALSE, ...) standardGeneric("gendistance"))
 setMethod("gendistance", "data.frame", function(covariate, idcol=NULL,
           weights=NULL, prevent=NULL, force=NULL, rankcols=NULL,
           missing.weight=0.1, ndiscard=0, singular.method='solve',
-          talisman=NULL, prevent.res.match=NULL, ...) {
+          talisman=NULL, prevent.res.match=NULL, outRawDist = FALSE, ...) {
     nr <- nrow(covariate)
     nc <- ncol(covariate)
     stopifnot(nr > 0)
@@ -102,6 +107,16 @@ setMethod("gendistance", "data.frame", function(covariate, idcol=NULL,
     mycolnames <- names(covariate)
     mateIDs <- integer(0)
     bad.data <- NULL
+
+    # warning for factor variables
+    factorcols <- setdiff(which(sapply(covariate, is.factor)), idcol)
+    if(length(factorcols)) {
+      warning(sprintf("Factor variables will be converted into numeric which may not be ideal; consider converting factor variables [%s] before calling gendistance", paste(mycolnames[factorcols], collapse=', ')))
+      # convert factor to numeric
+      for(i in factorcols) {
+        covariate[,i] <- as.numeric(covariate[,i])
+      }
+    }
 
     # columns that aren't numeric should be marked bad
     badcol <- which(sapply(1:nc, FUN=function(x) suppressWarnings(!is.numeric(covariate[,x]))))
@@ -116,12 +131,6 @@ setMethod("gendistance", "data.frame", function(covariate, idcol=NULL,
             row.names(covariate) <- myrownames
             badcol <- union(badcol, idcol)
         }
-    }
-
-    # warning for factor variables
-    factorcols <- setdiff(which(sapply(covariate, is.factor)), idcol)
-    if(length(factorcols)) {
-      warning(sprintf("consider converting factor variables [%s] before calling gendistance", paste(mycolnames[factorcols], collapse=', ')))
     }
 
     if(is.null(weights)) {
@@ -243,8 +252,12 @@ setMethod("gendistance", "data.frame", function(covariate, idcol=NULL,
 
     # Create the covariance matrix and invert it
     X.cov <- cov.wt(X)
+    if(qr(X)$rank == nrow(X.cov$cov)) {
+        Sinv <- tryCatch(solve(X.cov$cov), error=function(e) { warning(e[[1]]); NULL })
+    } else {
+        Sinv <- NULL
+    }
     # use pseudo-inverse if matrix is singular
-    Sinv <- tryCatch(solve(X.cov$cov), error=function(e) { warning(e[[1]]); NULL })
     if(is.null(Sinv)) {
         # options for singular.method: [solve, ginv]
         if(is.null(singular.method) || !is.character(singular.method)) singular.method <- 'solve'
@@ -276,6 +289,9 @@ setMethod("gendistance", "data.frame", function(covariate, idcol=NULL,
     maxval <- Inf
     # add back row names
     dimnames(mdists) <- list(myrownames, myrownames)
+    if(outRawDist) {
+        rawDist <- mdists
+    }
 
     # penalize "prevent" columns with matching values by setting distance to maxval
     # prevent is a vector of column names found in bad.data
@@ -319,6 +335,13 @@ setMethod("gendistance", "data.frame", function(covariate, idcol=NULL,
     diag(mdists) <- maxval
     # convert matrix to data frame
     mdists <- as.data.frame(mdists)
-
-    list(dist=mdists, cov=covariate, ignored=bad.data, weights=weights, prevent=prevent, mates=mateIDs, rankcols=rankcols, missing.weight=missing.weight, ndiscard=nphantoms)
+    res <- list(dist=mdists, cov=covariate, ignored=bad.data, weights=weights,
+        prevent=prevent, mates=mateIDs, rankcols=rankcols,
+        missing.weight=missing.weight, ndiscard=nphantoms
+    )
+    if(outRawDist) {
+        diag(rawDist) <- maxval
+        res[['rawDist']] <- as.data.frame(rawDist)
+    }
+    res
 })

@@ -1,12 +1,14 @@
 Package: nbpMatching
 Type: Package
 Title: Functions for Optimal Non-Bipartite Matching
-Version: 1.5.1
-Date: 2016-04-18
-Author: Cole Beck [aut, cre], Bo Lu [aut], Robert Greevy [aut]
-Maintainer: Cole Beck <cole.beck@vanderbilt.edu>
+Version: 1.5.4
+Date: 2023-08-18
+Author: Cole Beck [aut, cre],
+  Bo Lu [aut],
+  Robert Greevy [aut]
+Maintainer: Cole Beck <cole.beck@vumc.org>
 Authors@R: c(person("Cole", "Beck", role = c("aut", "cre"),
-    email = "cole.beck@vanderbilt.edu"),
+    email = "cole.beck@vumc.org"),
     person("Bo", "Lu", role = "aut"),
     person("Robert", "Greevy", role = "aut"))
 Description: Perform non-bipartite matching and matched randomization. A
@@ -27,13 +29,13 @@ Description: Perform non-bipartite matching and matched randomization. A
     'gendistance()'.
 License: GPL (>= 2)
 Imports: methods, stats, Hmisc, MASS, utils
-URL: http://biostat.mc.vanderbilt.edu/wiki/Main/MatchedRandomization
+URL: https://biostat.app.vumc.org/wiki/Main/MatchedRandomization
 Collate: 'distancematrix.R' 'nonbimatch.R' 'assign.grp.R'
         'fill.missing.R' 'gendistance.R' 'make.phantoms.R'
         'nbpmatching-package.R' 'qom.R' 'quantile.R' 'subsetMatches.R'
         'utils.R'
-RoxygenNote: 5.0.1
+RoxygenNote: 7.2.3
 NeedsCompilation: yes
-Packaged: 2016-04-18 23:15:56 UTC; beckca
+Packaged: 2023-08-18 19:35:05 UTC; beckca
 Repository: CRAN
-Date/Publication: 2016-04-19 08:12:05
+Date/Publication: 2023-08-19 00:12:36 UTC
