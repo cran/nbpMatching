@@ -1,8 +1,8 @@
 Package: nbpMatching
 Type: Package
 Title: Functions for Optimal Non-Bipartite Matching
-Version: 1.5.4
-Date: 2023-08-18
+Version: 1.5.5
+Date: 2024-05-13
 Author: Cole Beck [aut, cre],
   Bo Lu [aut],
   Robert Greevy [aut]
@@ -34,8 +34,8 @@ Collate: 'distancematrix.R' 'nonbimatch.R' 'assign.grp.R'
         'fill.missing.R' 'gendistance.R' 'make.phantoms.R'
         'nbpmatching-package.R' 'qom.R' 'quantile.R' 'subsetMatches.R'
         'utils.R'
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 NeedsCompilation: yes
-Packaged: 2023-08-18 19:35:05 UTC; beckca
+Packaged: 2024-05-17 17:48:02 UTC; beckca
 Repository: CRAN
-Date/Publication: 2023-08-19 00:12:36 UTC
+Date/Publication: 2024-05-17 18:10:02 UTC
