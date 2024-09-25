@@ -1,8 +1,8 @@
 Package: nbpMatching
 Type: Package
 Title: Functions for Optimal Non-Bipartite Matching
-Version: 1.5.5
-Date: 2024-05-13
+Version: 1.5.6
+Date: 2024-09-23
 Author: Cole Beck [aut, cre],
   Bo Lu [aut],
   Robert Greevy [aut]
@@ -29,13 +29,13 @@ Description: Perform non-bipartite matching and matched randomization. A
     'gendistance()'.
 License: GPL (>= 2)
 Imports: methods, stats, Hmisc, MASS, utils
-URL: https://biostat.app.vumc.org/wiki/Main/MatchedRandomization
+URL: https://github.com/couthcommander/nbpMatching
 Collate: 'distancematrix.R' 'nonbimatch.R' 'assign.grp.R'
         'fill.missing.R' 'gendistance.R' 'make.phantoms.R'
         'nbpmatching-package.R' 'qom.R' 'quantile.R' 'subsetMatches.R'
         'utils.R'
 RoxygenNote: 7.3.1
 NeedsCompilation: yes
-Packaged: 2024-05-17 17:48:02 UTC; beckca
+Packaged: 2024-09-24 20:43:47 UTC; beckca
 Repository: CRAN
-Date/Publication: 2024-05-17 18:10:02 UTC
+Date/Publication: 2024-09-25 06:50:02 UTC

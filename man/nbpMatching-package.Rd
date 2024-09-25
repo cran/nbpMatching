@@ -12,7 +12,7 @@ running nonbimatch.
 }
 \details{
 The most current documentation is available at
-\url{https://biostat.app.vumc.org/wiki/Main/MatchedRandomization}.
+\url{https://github.com/couthcommander/nbpMatching}.
 }
 \examples{
 
@@ -52,7 +52,7 @@ trials with missing data. Pharmacoepidemiol Drug Saf. 2012 May;21 Suppl
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://biostat.app.vumc.org/wiki/Main/MatchedRandomization}
+  \item \url{https://github.com/couthcommander/nbpMatching}
 }
 
 }
